@@ -8,14 +8,13 @@ use winit::{
 };
 
 use crate::models;
-use crate::models::RAW_VERTICES;
 
 const ALL_VERT_COUNT: usize = 3;
 static mut ALL_VERT: [models::Vertex; ALL_VERT_COUNT] = [models::Vertex {
     position: [0.0, 0.0],
     color: [0.0, 0.0, 0.0],
 }; ALL_VERT_COUNT];
-static mut ALL_INDICES: [u16; ALL_VERT_COUNT] = [0, 1, 2];
+static mut ALL_INDICES: [u16; ALL_VERT_COUNT] = [0; ALL_VERT_COUNT];
 
 struct State {
     surface: wgpu::Surface,
