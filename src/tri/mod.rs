@@ -8,6 +8,14 @@ use winit::{
 };
 
 use crate::models;
+use crate::models::RAW_VERTICES;
+
+const ALL_VERT_COUNT: usize = 3;
+static mut ALL_VERT: [models::Vertex; ALL_VERT_COUNT] = [models::Vertex {
+    position: [0.0, 0.0],
+    color: [0.0, 0.0, 0.0],
+}; ALL_VERT_COUNT];
+static mut ALL_INDICES: [u16; ALL_VERT_COUNT] = [0, 1, 2];
 
 struct State {
     surface: wgpu::Surface,
@@ -24,7 +32,7 @@ struct State {
 }
 
 impl State {
-    async fn new(window: &Window, model: &models::Widget) -> Self {
+    async fn new(window: &Window) -> Self {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -115,15 +123,16 @@ impl State {
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(models::VERTICES),
+            //contents: bytemuck::cast_slice(models::VERTICES),
+            contents: unsafe { bytemuck::cast_slice(&ALL_VERT) },
             usage: wgpu::BufferUsage::VERTEX,
         });
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(&model.indices),
+            contents: unsafe { bytemuck::cast_slice(&ALL_INDICES) },
             usage: wgpu::BufferUsage::INDEX,
         });
-        let num_indices = models::TRIANGLE_INDICES.len() as u32;
+        let num_indices = ALL_VERT_COUNT as u32;
 
         Self {
             surface,
@@ -188,15 +197,18 @@ impl State {
     }
 }
 
-pub(crate) fn init(model: &models::Widget) {
+pub(crate) fn init(model: &dyn models::Renders) {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     use futures::executor::block_on;
 
+    unsafe {
+        &model.render(&mut ALL_VERT, &mut ALL_INDICES);
+    }
     // Since main can't be async, we're going to need to block
-    let mut state = block_on(State::new(&window, model));
+    let mut state = block_on(State::new(&window));
 
     event_loop.run(move |event, _, control_flow| {
         match event {
