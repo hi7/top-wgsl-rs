@@ -7,14 +7,52 @@ pub(crate) struct Vertex {
     color: [f32; 3],
 }
 
+impl Vertex {
+    fn new() -> Vertex {
+        Vertex {
+            position: [0.0, 0.0],
+            color: [0.5, 0.0, 0.0],
+        }
+    }
+}
+
 #[derive(Debug)]
-struct Widget {
-    vertices: [Vertex],
+pub struct Widget {
+    vertices: [Vertex; 3],
+    pub indices: [u16; 3],
+    location: (f32, f32),
+}
+
+trait Renders {
+    fn render(&self);
+}
+
+pub struct Laser {
+    pub widget: Widget,
+    energy: f32,
+}
+
+impl Laser {
+    pub fn new() -> Laser {
+        Laser {
+            widget: Widget {
+                vertices: [Vertex::new(); 3],
+                indices: [2, 5, 6],
+                location: (0.05, 0.05)
+            },
+            energy: 0.5,
+        }
+    }
+}
+
+impl Renders for Laser {
+    fn render(&self) {
+
+    }
 }
 
 // 0 1 2 3 4
 // 5       6
-// todo!(make private and use Widget vertices);
 pub(crate) const VERTICES: &[Vertex] = &[
     Vertex {
         position: [-0.1, 0.1],
@@ -45,8 +83,7 @@ pub(crate) const VERTICES: &[Vertex] = &[
         color: [0.01, 0.0, 0.0],
     }, // 6
 ];
-// todo!(make private and move information to Widget);
-pub(crate) const INDICES: &[u16] = &[2, 5, 6];//, 1, 2, 4, 2, 3, 4, /* padding */ 0];
+pub(crate) const TRIANGLE_INDICES: &[u16] = &[2, 5, 6];//, 1, 2, 4, 2, 3, 4, /* padding */ 0];
 
 impl Vertex {
     pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
