@@ -7,7 +7,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-const ALL_VERT_COUNT: usize = 3;
+const ALL_VERT_COUNT: usize = 6;
 static mut ALL_VERT: [Vertex; ALL_VERT_COUNT] = [Vertex {
     position: [0.0, 0.0],
     color: [0.0, 0.0, 0.0],
@@ -21,15 +21,6 @@ const NUM_OF_COORDINATES: usize = 2;
 pub struct Vertex {
     pub position: [f32; NUM_OF_COORDINATES],
     pub color: [f32; 3],
-}
-
-impl Vertex {
-    pub fn new() -> Vertex {
-        Vertex {
-            position: [0.0, 0.0],
-            color: [0.5, 0.0, 0.0],
-        }
-    }
 }
 
 impl Vertex {
@@ -168,7 +159,6 @@ impl State {
 
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
-            //contents: bytemuck::cast_slice(models::VERTICES),
             contents: unsafe { bytemuck::cast_slice(&ALL_VERT) },
             usage: wgpu::BufferUsage::VERTEX,
         });
@@ -250,7 +240,8 @@ pub(crate) fn init(model: &dyn Renders) {
     use futures::executor::block_on;
 
     unsafe {
-        &model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
+        let offset = &model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
+        println!("offset: {}", offset);
     }
     // Since main can't be async, we're going to need to block
     let mut state = block_on(State::new(&window));

@@ -33,7 +33,16 @@ impl tri::Renders for Laser {
             vert[i].color[1] = 0.0;
             vert[i].color[2] = 0.0;
         }
-        offset + 3
+        for n in 0..3 {
+            let i = n + 3 + offset;
+            idx[i] = (n + 3) as u16;
+            vert[i].position[0] = RAW_VERTICES[indices[n]].position[0] * self.energy + self.widget.location.0;
+            vert[i].position[1] = RAW_VERTICES[indices[n]].position[1] * self.energy + self.widget.location.1;
+            vert[i].color[0] = 0.5;
+            vert[i].color[1] = 0.0;
+            vert[i].color[2] = 0.0;
+        }
+        offset + 6
     }
 }
 
