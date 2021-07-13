@@ -56,13 +56,11 @@ impl Vertex {
 #[derive(Debug)]
 pub struct Widget {
     pub vertices: [Vertex; 3],
-    pub indices: [u16; 3],
     pub location: (f32, f32),
 }
 
 pub trait Renders {
-    fn render(&self, vert: &mut [Vertex], idx: &mut [u16]);
-    fn indices(&self) -> [u16; 3];
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: usize) -> usize;
 }
 
 struct State {
@@ -253,7 +251,7 @@ pub(crate) fn init(model: &dyn Renders) {
     use futures::executor::block_on;
 
     unsafe {
-        &model.render(&mut ALL_VERT, &mut ALL_INDICES);
+        &model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
     }
     // Since main can't be async, we're going to need to block
     let mut state = block_on(State::new(&window));

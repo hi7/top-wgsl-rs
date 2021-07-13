@@ -15,7 +15,6 @@ impl Laser {
         Laser {
             widget: tri::Widget {
                 vertices: [tri::Vertex::new(); 3],
-                indices: [2, 5, 6],
                 location: (0.0, 0.5)
             },
             energy: 0.5,
@@ -24,18 +23,18 @@ impl Laser {
 }
 
 impl tri::Renders for Laser {
-    fn render(&self, vert: &mut [tri::Vertex], idx: &mut [u16]) {
+    fn render(&self, vert: &mut [tri::Vertex], idx: &mut [u16], offset: usize) -> usize {
+        let indices: [usize; 3] = [2, 5, 6];
         for n in 0..3 {
-            idx[n] = n as u16;
-            vert[n].position[0] = RAW_VERTICES[self.widget.indices[n] as usize].position[0] + self.widget.location.0;
-            vert[n].position[1] = RAW_VERTICES[self.widget.indices[n] as usize].position[1] + self.widget.location.1;
-            vert[n].color[0] = 0.02;
-            vert[n].color[1] = 0.0;
-            vert[n].color[2] = 0.0;
+            let i = n + offset;
+            idx[i] = n as u16;
+            vert[i].position[0] = RAW_VERTICES[indices[n]].position[0] + self.widget.location.0;
+            vert[i].position[1] = RAW_VERTICES[indices[n]].position[1] + self.widget.location.1;
+            vert[i].color[0] = 0.02;
+            vert[i].color[1] = 0.0;
+            vert[i].color[2] = 0.0;
         }
-    }
-    fn indices(&self) -> [u16; 3] {
-        self.widget.indices
+        offset + 3
     }
 }
 
