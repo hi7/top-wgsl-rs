@@ -7,14 +7,63 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::models;
-
 const ALL_VERT_COUNT: usize = 3;
-static mut ALL_VERT: [models::Vertex; ALL_VERT_COUNT] = [models::Vertex {
+static mut ALL_VERT: [Vertex; ALL_VERT_COUNT] = [Vertex {
     position: [0.0, 0.0],
     color: [0.0, 0.0, 0.0],
 }; ALL_VERT_COUNT];
 static mut ALL_INDICES: [u16; ALL_VERT_COUNT] = [0; ALL_VERT_COUNT];
+
+const NUM_OF_COORDINATES: usize = 2;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Vertex {
+    pub position: [f32; NUM_OF_COORDINATES],
+    pub color: [f32; 3],
+}
+
+impl Vertex {
+    pub fn new() -> Vertex {
+        Vertex {
+            position: [0.0, 0.0],
+            color: [0.5, 0.0, 0.0],
+        }
+    }
+}
+
+impl Vertex {
+    pub(crate) fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::InputStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; NUM_OF_COORDINATES]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+            ],
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Widget {
+    pub vertices: [Vertex; 3],
+    pub indices: [u16; 3],
+    pub location: (f32, f32),
+}
+
+pub trait Renders {
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16]);
+    fn indices(&self) -> [u16; 3];
+}
 
 struct State {
     surface: wgpu::Surface,
@@ -86,7 +135,7 @@ impl State {
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "main",
-                buffers: &[models::Vertex::desc()],
+                buffers: &[Vertex::desc()],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -196,7 +245,7 @@ impl State {
     }
 }
 
-pub(crate) fn init(model: &dyn models::Renders) {
+pub(crate) fn init(model: &dyn Renders) {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
