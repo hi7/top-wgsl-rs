@@ -14,7 +14,6 @@ impl Laser {
     pub fn new() -> Laser {
         Laser {
             widget: tri::Widget {
-                vertices: [tri::Vertex::new(); 3],
                 location: (0.0, 0.5)
             },
             energy: 0.5,

@@ -55,7 +55,6 @@ impl Vertex {
 
 #[derive(Debug)]
 pub struct Widget {
-    pub vertices: [Vertex; 3],
     pub location: (f32, f32),
 }
 
