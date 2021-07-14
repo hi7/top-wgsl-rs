@@ -241,7 +241,7 @@ pub(crate) fn init(model: &dyn Renders) {
 
     let mut vert_offset= 0;
     unsafe {
-        vert_offset = model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
+        vert_offset = model.render(&mut ALL_VERT, &mut ALL_INDICES, vert_offset);
     }
     // Since main can't be async, we're going to need to block
     let mut state = block_on(State::new(&window, vert_offset));
