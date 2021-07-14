@@ -22,10 +22,10 @@ impl Laser {
 }
 
 impl tri::Renders for Laser {
-    fn render(&self, vert: &mut [tri::Vertex], idx: &mut [u16], offset: usize) -> usize {
+    fn render(&self, vert: &mut [tri::Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let indices: [usize; 3] = [2, 5, 6];
         for n in 0..3 {
-            let i = n + offset;
+            let i = n + offset as usize;
             idx[i] = n as u16;
             vert[i].position[0] = RAW_VERTICES[indices[n]].position[0] + self.widget.location.0;
             vert[i].position[1] = RAW_VERTICES[indices[n]].position[1] + self.widget.location.1;
@@ -34,7 +34,7 @@ impl tri::Renders for Laser {
             vert[i].color[2] = 0.0;
         }
         for n in 0..3 {
-            let i = n + 3 + offset;
+            let i = n + 3 + offset as usize;
             idx[i] = (n + 3) as u16;
             vert[i].position[0] = RAW_VERTICES[indices[n]].position[0] * self.energy + self.widget.location.0;
             vert[i].position[1] = RAW_VERTICES[indices[n]].position[1] * self.energy + self.widget.location.1;

@@ -50,7 +50,7 @@ pub struct Widget {
 }
 
 pub trait Renders {
-    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: usize) -> usize;
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32;
 }
 
 struct State {
@@ -68,7 +68,7 @@ struct State {
 }
 
 impl State {
-    async fn new(window: &Window) -> Self {
+    async fn new(window: &Window, vert_count: u32) -> Self {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -167,7 +167,7 @@ impl State {
             contents: unsafe { bytemuck::cast_slice(&ALL_INDICES) },
             usage: wgpu::BufferUsage::INDEX,
         });
-        let num_indices = ALL_VERT_COUNT as u32;
+        let num_indices = vert_count;
 
         Self {
             surface,
@@ -239,12 +239,12 @@ pub(crate) fn init(model: &dyn Renders) {
 
     use futures::executor::block_on;
 
+    let mut vert_offset= 0;
     unsafe {
-        let offset = &model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
-        println!("offset: {}", offset);
+        vert_offset = model.render(&mut ALL_VERT, &mut ALL_INDICES, 0);
     }
     // Since main can't be async, we're going to need to block
-    let mut state = block_on(State::new(&window));
+    let mut state = block_on(State::new(&window, vert_offset));
 
     event_loop.run(move |event, _, control_flow| {
         match event {
