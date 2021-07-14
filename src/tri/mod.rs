@@ -93,8 +93,8 @@ struct State {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
-    uniforms: Uniforms,
-    uniform_buffer: wgpu::Buffer,
+    //uniforms: Uniforms,
+    //uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
 }
 
@@ -248,8 +248,8 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_indices,
-            uniforms,
-            uniform_buffer,
+            //uniforms,
+            //uniform_buffer,
             uniform_bind_group,
         }
     }
