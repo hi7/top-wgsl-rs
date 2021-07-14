@@ -7,6 +7,11 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
+pub const X: usize = 0;
+pub const Y: usize = 1;
+pub const RED: usize = 0;
+pub const GREEN: usize = 1;
+pub const BLUE: usize = 2;
 const ALL_VERT_COUNT: usize = 6;
 static mut ALL_VERT: [Vertex; ALL_VERT_COUNT] = [Vertex {
     position: [0.0, 0.0],
