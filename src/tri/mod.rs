@@ -77,12 +77,13 @@ pub struct Widget {
     pub location: (f32, f32),
 }
 
-pub trait Renders {
+pub trait Entity {
+    fn update(&mut self);
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32;
 }
 
 struct State {
-    // place vertices here?
+    model: &'static Entity,
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -99,7 +100,7 @@ struct State {
 }
 
 impl State {
-    async fn new(window: &Window, vert_count: u32) -> Self {
+    async fn new(window: &Window, model: &'static mut impl Entity, vert_count: u32) -> Self {
         let size = window.inner_size();
 
         // The instance is a handle to our GPU
@@ -238,6 +239,7 @@ impl State {
         let num_indices = vert_count;
 
         Self {
+            model,
             surface,
             device,
             queue,
@@ -304,19 +306,20 @@ impl State {
     }
 }
 
-pub(crate) fn init(model: &dyn Renders) {
+pub(crate) fn init(model: &'static mut impl Entity) {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
     use futures::executor::block_on;
 
+    //model.update();
     let mut vert_offset= 0;
     unsafe {
         vert_offset = model.render(&mut ALL_VERT, &mut ALL_INDICES, vert_offset);
     }
     // Since main can't be async, we're going to need to block
-    let mut state = block_on(State::new(&window, vert_offset));
+    let mut state = block_on(State::new(&window, model, vert_offset));
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -347,6 +350,7 @@ pub(crate) fn init(model: &dyn Renders) {
                 }
             }
             Event::RedrawRequested(_) => {
+                //model.update();
                 state.update();
                 match state.render() {
                     Ok(_) => {}

@@ -1,8 +1,8 @@
-use crate::tri::{Widget, Renders, Vertex, X, Y, RED, GREEN, BLUE};
+use crate::tri::{Widget, Entity, Vertex, X, Y, RED, GREEN, BLUE};
 
 pub struct Laser {
     pub widget: Widget,
-    energy: f32,
+    pub energy: f32,
 }
 
 impl Laser {
@@ -11,12 +11,18 @@ impl Laser {
             widget: Widget {
                 location: (0.0, 0.5)
             },
-            energy: 0.33,
+            energy: 0.3,
         }
     }
 }
 
-impl Renders for Laser {
+impl Entity for Laser {
+    fn update(&mut self) {
+        if self.energy < 1.0 {
+            self.energy += 0.1;
+            if self.energy > 1.0 { self.energy = 1.0 }
+        }
+    }
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let indices: [usize; 3] = [2, 5, 6];
         for n in 0..3 { // back ground
