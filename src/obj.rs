@@ -65,13 +65,13 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(x: f32, y: f32) -> Container {
+    pub fn new(x: f32, y: f32, cargo: u8) -> Container {
         Container {
             widget: Widget {
                 location: (x, y)
             },
             capacity: 10,
-            cargo: 1,
+            cargo,
             laser_energy: 0.0,
             thrust_energy: 0.0,
         }
@@ -127,10 +127,10 @@ pub struct Ship {
 }
 
 impl Ship {
-    pub fn new(x: f32, y: f32) -> Ship {
+    pub fn new(x: f32, y: f32, cargo: u8) -> Ship {
         Ship {
             laser: Laser::new(x, y + 0.2),
-            container: Container::new(x, y),
+            container: Container::new(x, y, cargo),
         }
     }
 }
@@ -140,7 +140,11 @@ impl Entity for Ship {
         self.laser.update();
         if self.laser.energy == 1.0 {
             self.container.laser_energy += RECHARGE;
-            if self.container.laser_energy > 1.0 - self.container.cargo as f32/ 10.0 {
+            if self.container.cargo == 0 {
+                if self.container.laser_energy > 2.0 {
+                    self.container.laser_energy = 2.0;
+                }
+            } else if self.container.laser_energy > 1.0 - self.container.cargo as f32/ 10.0 {
                 self.container.laser_energy = 1.0 - self.container.cargo as f32 / 10.0;
             }
         }
