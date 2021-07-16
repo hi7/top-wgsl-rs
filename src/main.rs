@@ -1,19 +1,14 @@
 mod tri;
 mod obj;
 
-use crate::obj::{Laser};
-use crate::tri::{Widget};
-
-static mut LASER: Laser = Laser {
-    widget: Widget {
-        location: (0.0, 0.5)
-    },
-    energy: 0.1,
-};
+use crate::obj::{Laser, Container};
+use crate::tri::{Entity};
 
 fn main() {
-    unsafe {
-        tri::init(&mut LASER);
-    }
+    let entities: Box<[Box<dyn Entity>]> = Box::new([
+        Box::new(Laser::new(0.0, 0.2)),
+        Box::new(Container::new(0.0, 0.0)),
+    ]);
+    tri::init(entities);
 }
 

@@ -5,6 +5,17 @@ pub struct Laser {
     pub energy: f32,
 }
 
+impl Laser {
+    pub fn new(x: f32, y: f32) -> Laser {
+        Laser {
+            widget: Widget {
+                location: (x, y)
+            },
+            energy: 0.0,
+        }
+    }
+}
+
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
@@ -16,7 +27,7 @@ impl Entity for Laser {
         let indices: [usize; 3] = [2, 5, 6];
         for n in 0..3 { // back ground
             let i = n + offset as usize;
-            idx[i] = n as u16;
+            idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = 0.05;
@@ -25,7 +36,7 @@ impl Entity for Laser {
         }
         for n in 0..3 { // energy area
             let i = n + 3 + offset as usize;
-            idx[i] = (n + 3) as u16;
+            idx[i] = i as u16;
             if n == 0 {
                 vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
                 vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
@@ -41,7 +52,49 @@ impl Entity for Laser {
             vert[i].color[GREEN] = 0.0;
             vert[i].color[BLUE] = 0.0;
         }
-        offset + 6
+        6
+    }
+}
+
+pub struct Container {
+    pub widget: Widget,
+    pub cargo: u8,
+}
+
+impl Container {
+    pub fn new(x: f32, y: f32) -> Container {
+        Container {
+            widget: Widget {
+                location: (x, y)
+            },
+            cargo: 1,
+        }
+    }
+}
+
+impl Entity for Container {
+    fn update(&mut self) {}
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
+        let indices: [usize; 6] = [0, 5, 6, 6, 4, 0];
+        for n in 0..6 { // back ground
+            let i = n + offset as usize;
+            idx[i] = i as u16;
+            vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
+            vert[i].color[RED] = 0.01;
+            vert[i].color[GREEN] = 0.01;
+            vert[i].color[BLUE] = 0.01;
+        }
+        for n in 0..6 { // energy area
+            let i = n + 6 + offset as usize;
+            idx[i] = i as u16;
+            vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] * (self.cargo as f32 / 3.0) + self.widget.location.0;
+            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.cargo as f32 / 3.0) + self.widget.location.1;
+            vert[i].color[RED] = 0.1;
+            vert[i].color[GREEN] = 0.1;
+            vert[i].color[BLUE] = 0.1;
+        }
+        12
     }
 }
 

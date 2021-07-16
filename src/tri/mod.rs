@@ -12,7 +12,7 @@ pub const Y: usize = 1;
 pub const RED: usize = 0;
 pub const GREEN: usize = 1;
 pub const BLUE: usize = 2;
-const ALL_VERT_COUNT: usize = 6;
+const ALL_VERT_COUNT: usize = 18;
 static mut ALL_VERT: [Vertex; ALL_VERT_COUNT] = [Vertex {
     position: [0.0, 0.0],
     color: [0.0, 0.0, 0.0],
@@ -89,7 +89,7 @@ pub trait Entity {
 }
 
 struct State {
-    model: &'static mut dyn Entity,
+    entities: Box<[Box<dyn Entity>]>,
     init_aspect: [f32; 2],
     surface: wgpu::Surface,
     device: wgpu::Device,
@@ -107,7 +107,7 @@ struct State {
 }
 
 impl State {
-    async fn new(window: &Window, model: &'static mut impl Entity, vert_count: u32) -> Self {
+    async fn new(window: &Window, entities: Box<[Box<dyn Entity>]>, vert_count: u32) -> Self {
         let size = window.inner_size();
         let init_aspect = [size.width as f32, size.height as f32];
 
@@ -249,7 +249,7 @@ impl State {
 
         Self {
             init_aspect,
-            model,
+            entities,
             surface,
             device,
             queue,
@@ -281,8 +281,11 @@ impl State {
 
     fn update(&mut self) {
         //let now = Instant::now();
-        self.model.update();
-        unsafe { self.model.render(&mut ALL_VERT, &mut ALL_INDICES, 0); }
+        let mut vert_count = 0;
+        for entity in self.entities.iter_mut() {
+            entity.update();
+            unsafe { vert_count += entity.render(&mut ALL_VERT, &mut ALL_INDICES, vert_count); }
+        }
         //unsafe { self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&ALL_VERT)); }
         //println!("t={}us", now.elapsed().as_micros());
     }
@@ -363,7 +366,7 @@ impl State {
     }
 }
 
-pub(crate) fn init(model: &'static mut impl Entity) {
+pub(crate) fn init(entities: Box<[Box<dyn Entity>]>) {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
@@ -371,9 +374,12 @@ pub(crate) fn init(model: &'static mut impl Entity) {
     use futures::executor::block_on;
 
     let mut vert_count = 0;
-    unsafe { vert_count = model.render(&mut ALL_VERT, &mut ALL_INDICES, vert_count); }
-
-    let mut state = block_on(State::new(&window, model, vert_count));
+    unsafe {
+        for entity in entities.iter() {
+            vert_count += entity.render(&mut ALL_VERT, &mut ALL_INDICES, vert_count);
+        }
+    }
+    let mut state = block_on(State::new(&window, entities, vert_count));
 
     event_loop.run(move |event, _, control_flow| {
         match event {
