@@ -1,4 +1,5 @@
 use crate::tri::{Widget, Entity, Vertex, X, Y, RED, GREEN, BLUE};
+use cgmath::num_traits::signum;
 
 pub struct Laser {
     pub widget: Widget,
@@ -61,7 +62,7 @@ pub struct Container {
     pub capacity: u8,
     pub cargo: u8,
     pub laser_energy: f32,
-    pub thrust_energy: f32,
+    pub thruster_energy: f32,
 }
 
 impl Container {
@@ -73,7 +74,7 @@ impl Container {
             capacity: 10,
             cargo,
             laser_energy: 0.0,
-            thrust_energy: 0.0,
+            thruster_energy: 0.0,
         }
     }
 }
@@ -121,9 +122,63 @@ impl Entity for Container {
     }
 }
 
+pub struct Thruster {
+    pub widget: Widget,
+    pub energy: f32,
+}
+
+impl Thruster {
+    pub fn new(x: f32, y: f32) -> Thruster {
+        Thruster {
+            widget: Widget {
+                location: (x, y)
+            },
+            energy: 0.0,
+        }
+    }
+}
+impl Entity for Thruster {
+    fn update(&mut self) {
+        if self.energy < 1.0 {
+            self.energy += RECHARGE;
+            if self.energy > 1.0 { self.energy = 1.0 }
+        }
+    }
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
+        let indices: [usize; 6] = [1, 5, 6, 6, 3, 1];
+        for n in 0..6 { // back ground
+            let i = n + offset as usize;
+            idx[i] = i as u16;
+            vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
+            vert[i].color[RED] = 0.02;
+            vert[i].color[GREEN] = 0.0;
+            vert[i].color[BLUE] = 0.0;
+        }
+        for n in 0..6 { // energy area
+            let i = n + 6 + offset as usize;
+            idx[i] = i as u16;
+            let x = RAW_VERTICES[indices[n]].position[X];
+            let y = RAW_VERTICES[indices[n]].position[Y];
+            if indices[n] == 5 || indices[n] == 6 {
+                vert[i].position[X] = x + self.widget.location.0;
+                vert[i].position[Y] = y + self.widget.location.1;
+            } else {
+                vert[i].position[X] = x + signum(x) * (1.0 - self.energy) * 0.05 + self.widget.location.0;
+                vert[i].position[Y] = (y + 0.1) * self.energy - 0.1 + self.widget.location.1;
+            }
+            vert[i].color[RED] = 0.5;
+            vert[i].color[GREEN] = 0.0;
+            vert[i].color[BLUE] = 0.0;
+        }
+        12
+    }
+}
+
 pub struct Ship {
     pub laser: Laser,
     pub container: Container,
+    pub thruster: Thruster,
 }
 
 impl Ship {
@@ -131,6 +186,7 @@ impl Ship {
         Ship {
             laser: Laser::new(x, y + 0.2),
             container: Container::new(x, y, cargo),
+            thruster: Thruster::new(x, y - 0.2),
         }
     }
 }
@@ -150,11 +206,25 @@ impl Entity for Ship {
                     - self.container.cargo as f32 / self.container.capacity as f32;
             }
         }
+        self.thruster.update();
+        if self.thruster.energy == 1.0 {
+            self.container.thruster_energy += RECHARGE;
+            if self.container.cargo == 0 {
+                if self.container.thruster_energy > 2.0 {
+                    self.container.thruster_energy = 2.0;
+                }
+            } else if self.container.thruster_energy > 1.0
+                      - self.container.cargo as f32/ self.container.capacity as f32 {
+                self.container.thruster_energy = 1.0
+                    - self.container.cargo as f32 / self.container.capacity as f32;
+            }
+        }
         self.container.update();
     }
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let mut count = self.laser.render(vert, idx, offset);
         count += self.container.render(vert, idx, offset + count);
+        count += self.thruster.render(vert, idx, offset + count);
         offset + count
     }
 }
