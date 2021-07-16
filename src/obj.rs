@@ -5,21 +5,10 @@ pub struct Laser {
     pub energy: f32,
 }
 
-impl Laser {
-    pub fn new() -> Laser {
-        Laser {
-            widget: Widget {
-                location: (0.0, 0.5)
-            },
-            energy: 0.3,
-        }
-    }
-}
-
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
-            self.energy += 0.1;
+            self.energy += 0.0001;
             if self.energy > 1.0 { self.energy = 1.0 }
         }
     }

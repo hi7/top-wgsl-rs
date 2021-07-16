@@ -1,5 +1,5 @@
 use std::iter;
-
+//use std::time::Instant;
 use wgpu::util::DeviceExt;
 use winit::{
     event::*,
@@ -83,7 +83,7 @@ pub trait Entity {
 }
 
 struct State {
-    model: &'static Entity,
+    model: &'static mut dyn Entity,
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -142,7 +142,7 @@ impl State {
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Uniform Buffer"),
                 contents: bytemuck::cast_slice(&[uniforms]),
-                usage: wgpu::BufferUsage::UNIFORM | wgpu::BufferUsage::COPY_DST, // todo: check if COPY_DST is necessary
+                usage: wgpu::BufferUsage::UNIFORM, //| wgpu::BufferUsage::COPY_DST,
             }
         );
         let uniform_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -268,7 +268,13 @@ impl State {
         false
     }
 
-    fn update(&mut self) {}
+    fn update(&mut self) {
+        //let now = Instant::now();
+        self.model.update();
+        unsafe { self.model.render(&mut ALL_VERT, &mut ALL_INDICES, 0); }
+        //unsafe { self.queue.write_buffer(&self.vertex_buffer, 0, bytemuck::cast_slice(&ALL_VERT)); }
+        //println!("t={}us", now.elapsed().as_micros());
+    }
 
     fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
         let frame = self.swap_chain.get_current_frame()?.output;
@@ -293,6 +299,12 @@ impl State {
                 depth_stencil_attachment: None,
             });
 
+            // update vertex buffer
+            self.vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: unsafe { bytemuck::cast_slice(&ALL_VERT) },
+                usage: wgpu::BufferUsage::VERTEX,
+            });
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.uniform_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
@@ -313,13 +325,10 @@ pub(crate) fn init(model: &'static mut impl Entity) {
 
     use futures::executor::block_on;
 
-    //model.update();
-    let mut vert_offset= 0;
-    unsafe {
-        vert_offset = model.render(&mut ALL_VERT, &mut ALL_INDICES, vert_offset);
-    }
-    // Since main can't be async, we're going to need to block
-    let mut state = block_on(State::new(&window, model, vert_offset));
+    let mut vert_count = 0;
+    unsafe { vert_count = model.render(&mut ALL_VERT, &mut ALL_INDICES, vert_count); }
+
+    let mut state = block_on(State::new(&window, model, vert_count));
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -350,7 +359,6 @@ pub(crate) fn init(model: &'static mut impl Entity) {
                 }
             }
             Event::RedrawRequested(_) => {
-                //model.update();
                 state.update();
                 match state.render() {
                     Ok(_) => {}
