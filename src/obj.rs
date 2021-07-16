@@ -144,8 +144,10 @@ impl Entity for Ship {
                 if self.container.laser_energy > 2.0 {
                     self.container.laser_energy = 2.0;
                 }
-            } else if self.container.laser_energy > 1.0 - self.container.cargo as f32/ 10.0 {
-                self.container.laser_energy = 1.0 - self.container.cargo as f32 / 10.0;
+            } else if self.container.laser_energy > 1.0
+                      - self.container.cargo as f32/ self.container.capacity as f32 {
+                self.container.laser_energy = 1.0
+                    - self.container.cargo as f32 / self.container.capacity as f32;
             }
         }
         self.container.update();
