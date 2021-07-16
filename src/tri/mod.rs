@@ -27,7 +27,7 @@ const NUM_OF_COLORS: usize = 3;
 struct Uniforms {
     offset: [f32; 2],
     aspect: [f32; 2], // not really aspect ratio, more changed aspect after resize
-    // x: -1 to 1 y: -1 to 1
+    scale: [f32; 2],
 }
 
 impl Uniforms {
@@ -35,6 +35,7 @@ impl Uniforms {
         Self {
             offset: [0.0, 0.0],
             aspect: [1.0, 1.0],
+            scale: [0.5, 0.5],
         }
     }
     fn update_offset(&mut self, x: f32, y: f32) {
@@ -42,6 +43,9 @@ impl Uniforms {
     }
     fn update_aspect(&mut self, width: u32, height: u32, init_aspect: [f32; 2]) {
         self.aspect = [height as f32 / width as f32 * init_aspect[0]/init_aspect[1], 1.0];
+    }
+    fn update_scale(&mut self, x: f32, y: f32) {
+        self.scale = [x, y];
     }
 }
 
@@ -147,6 +151,7 @@ impl State {
         let mut uniforms = Uniforms::new();
         uniforms.update_offset(0.0, 0.0);
         uniforms.update_aspect(size.width, size.height, init_aspect);
+        uniforms.update_scale(0.5, 0.5);
         let uniform_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Uniform Buffer"),

@@ -4,6 +4,7 @@
 struct Uniforms {
     offset: vec2<f32>;
     aspect: vec2<f32>;
+    scale: vec2<f32>;
 };
 [[group(0), binding(0)]]
 var<uniform> uniforms: Uniforms;
@@ -24,7 +25,7 @@ fn main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.color = model.color;
-    out.clip_position = vec4<f32>((model.position + uniforms.offset) * uniforms.aspect, 0.0, 1.0);
+    out.clip_position = vec4<f32>((model.position + uniforms.offset) * uniforms.scale * uniforms.aspect, 0.0, 1.0);
     return out;
 }
 
