@@ -16,7 +16,7 @@ impl Laser {
         }
     }
 }
-const RECHARGE: f32 = 0.001;
+const RECHARGE: f32 = 0.0001;
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
@@ -80,8 +80,7 @@ impl Container {
 }
 
 impl Entity for Container {
-    fn update(&mut self) {
-    }
+    fn update(&mut self) {}
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let indices: [usize; 6] = [0, 5, 6, 6, 4, 0];
         for n in 0..6 { // back ground
@@ -93,7 +92,7 @@ impl Entity for Container {
             vert[i].color[GREEN] = 0.0;
             vert[i].color[BLUE] = 0.0;
         }
-        for n in 0..6 { // thrust energy area
+        for n in 0..6 { // laser energy area
             let i = n + 6 + offset as usize;
             idx[i] = i as u16;
             if indices[n] == 0 || indices[n] == 4 {
@@ -118,7 +117,22 @@ impl Entity for Container {
             vert[i].color[GREEN] = 0.1;
             vert[i].color[BLUE] = 0.1;
         }
-        18
+        for n in 0..6 { // thrust energy area
+            let i = n + 18 + offset as usize;
+            idx[i] = i as u16;
+            if indices[n] == 5 || indices[n] == 6 {
+                vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+                vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
+            } else {
+                vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+                vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.thruster_energy)
+                    - 0.1 + self.widget.location.1;
+            }
+            vert[i].color[RED] = 0.5;
+            vert[i].color[GREEN] = 0.0;
+            vert[i].color[BLUE] = 0.0;
+        }
+        24
     }
 }
 
@@ -225,7 +239,7 @@ impl Entity for Ship {
         let mut count = self.laser.render(vert, idx, offset);
         count += self.container.render(vert, idx, offset + count);
         count += self.thruster.render(vert, idx, offset + count);
-        offset + count
+        count
     }
 }
 
