@@ -30,7 +30,7 @@ impl Entity for Laser {
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
-            vert[i].color[RED] = 0.05;
+            vert[i].color[RED] = 0.02;
             vert[i].color[GREEN] = 0.0;
             vert[i].color[BLUE] = 0.0;
         }
@@ -59,6 +59,8 @@ impl Entity for Laser {
 pub struct Container {
     pub widget: Widget,
     pub cargo: u8,
+    pub laser_energy: f32,
+    pub thrust_energy: f32,
 }
 
 impl Container {
@@ -68,12 +70,16 @@ impl Container {
                 location: (x, y)
             },
             cargo: 1,
+            laser_energy: 0.0,
+            thrust_energy: 0.0,
         }
     }
 }
 
 impl Entity for Container {
-    fn update(&mut self) {}
+    fn update(&mut self) {
+
+    }
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let indices: [usize; 6] = [0, 5, 6, 6, 4, 0];
         for n in 0..6 { // back ground
@@ -81,20 +87,67 @@ impl Entity for Container {
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
-            vert[i].color[RED] = 0.01;
-            vert[i].color[GREEN] = 0.01;
-            vert[i].color[BLUE] = 0.01;
+            vert[i].color[RED] = 0.02;
+            vert[i].color[GREEN] = 0.0;
+            vert[i].color[BLUE] = 0.0;
         }
-        for n in 0..6 { // energy area
+        for n in 0..6 { // thrust energy area
             let i = n + 6 + offset as usize;
             idx[i] = i as u16;
-            vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] * (self.cargo as f32 / 3.0) + self.widget.location.0;
-            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.cargo as f32 / 3.0) + self.widget.location.1;
+            if indices[n] == 0 || indices[n] == 4 {
+                vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+                vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
+            } else {
+                vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+                vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.laser_energy)
+                    + 0.1 + self.widget.location.1;
+            }
+            vert[i].color[RED] = 0.5;
+            vert[i].color[GREEN] = 0.0;
+            vert[i].color[BLUE] = 0.0;
+        }
+        for n in 0..6 { // cargo area
+            let i = n + 12 + offset as usize;
+            idx[i] = i as u16;
+            vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
+            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.cargo as f32 / 10.0) + self.widget.location.1;
             vert[i].color[RED] = 0.1;
             vert[i].color[GREEN] = 0.1;
             vert[i].color[BLUE] = 0.1;
         }
-        12
+        18
+    }
+}
+
+pub struct Ship {
+    pub laser: Laser,
+    pub container: Container,
+}
+
+impl Ship {
+    pub fn new(x: f32, y: f32) -> Ship {
+        Ship {
+            laser: Laser::new(x, y + 0.2),
+            container: Container::new(x, y),
+        }
+    }
+}
+
+impl Entity for Ship {
+    fn update(&mut self) {
+        self.laser.update();
+        if self.laser.energy == 1.0 {
+            self.container.laser_energy += 0.0001;
+            if self.container.laser_energy > 0.5 {
+                self.container.laser_energy = 0.5;
+            }
+        }
+        self.container.update();
+    }
+    fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
+        let mut count = self.laser.render(vert, idx, offset);
+        count += self.container.render(vert, idx, offset + count);
+        offset + count
     }
 }
 
