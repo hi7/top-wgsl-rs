@@ -15,11 +15,11 @@ impl Laser {
         }
     }
 }
-
+const RECHARGE: f32 = 0.001;
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
-            self.energy += 0.0001;
+            self.energy += RECHARGE;
             if self.energy > 1.0 { self.energy = 1.0 }
         }
     }
@@ -58,6 +58,7 @@ impl Entity for Laser {
 
 pub struct Container {
     pub widget: Widget,
+    pub capacity: u8,
     pub cargo: u8,
     pub laser_energy: f32,
     pub thrust_energy: f32,
@@ -69,6 +70,7 @@ impl Container {
             widget: Widget {
                 location: (x, y)
             },
+            capacity: 10,
             cargo: 1,
             laser_energy: 0.0,
             thrust_energy: 0.0,
@@ -78,7 +80,6 @@ impl Container {
 
 impl Entity for Container {
     fn update(&mut self) {
-
     }
     fn render(&self, vert: &mut [Vertex], idx: &mut [u16], offset: u32) -> u32 {
         let indices: [usize; 6] = [0, 5, 6, 6, 4, 0];
@@ -110,7 +111,8 @@ impl Entity for Container {
             let i = n + 12 + offset as usize;
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
-            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] * (self.cargo as f32 / 10.0) + self.widget.location.1;
+            vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y]
+                * (self.cargo as f32 / self.capacity as f32) + self.widget.location.1;
             vert[i].color[RED] = 0.1;
             vert[i].color[GREEN] = 0.1;
             vert[i].color[BLUE] = 0.1;
@@ -137,9 +139,9 @@ impl Entity for Ship {
     fn update(&mut self) {
         self.laser.update();
         if self.laser.energy == 1.0 {
-            self.container.laser_energy += 0.0001;
-            if self.container.laser_energy > 0.5 {
-                self.container.laser_energy = 0.5;
+            self.container.laser_energy += RECHARGE;
+            if self.container.laser_energy > 1.0 - self.container.cargo as f32/ 10.0 {
+                self.container.laser_energy = 1.0 - self.container.cargo as f32 / 10.0;
             }
         }
         self.container.update();
