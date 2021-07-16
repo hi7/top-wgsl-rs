@@ -33,7 +33,7 @@ impl Entity for Laser {
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = 0.02;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[BLUE] = 0.005;
         }
         for n in 0..3 { // energy area
             let i = n + 3 + offset as usize;
@@ -90,7 +90,7 @@ impl Entity for Container {
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = 0.02;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[BLUE] = 0.005;
         }
         for n in 0..6 { // laser energy area
             let i = n + 6 + offset as usize;
@@ -130,7 +130,7 @@ impl Entity for Container {
             }
             vert[i].color[RED] = 0.5;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[BLUE] = 0.1;
         }
         24
     }
@@ -167,7 +167,7 @@ impl Entity for Thruster {
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = 0.02;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[BLUE] = 0.005;
         }
         for n in 0..6 { // energy area
             let i = n + 6 + offset as usize;
@@ -183,7 +183,7 @@ impl Entity for Thruster {
             }
             vert[i].color[RED] = 0.5;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[BLUE] = 0.1;
         }
         12
     }
@@ -211,8 +211,8 @@ impl Entity for Ship {
         if self.laser.energy == 1.0 {
             self.container.laser_energy += RECHARGE;
             if self.container.cargo == 0 {
-                if self.container.laser_energy > 2.0 {
-                    self.container.laser_energy = 2.0;
+                if self.container.laser_energy + self.container.thruster_energy > 2.0 {
+                    self.container.laser_energy = 2.0 - self.container.thruster_energy;
                 }
             } else if self.container.laser_energy > 1.0
                       - self.container.cargo as f32/ self.container.capacity as f32 {
@@ -224,8 +224,8 @@ impl Entity for Ship {
         if self.thruster.energy == 1.0 {
             self.container.thruster_energy += RECHARGE;
             if self.container.cargo == 0 {
-                if self.container.thruster_energy > 2.0 {
-                    self.container.thruster_energy = 2.0;
+                if self.container.thruster_energy + self.container.laser_energy > 2.0 {
+                    self.container.thruster_energy = 2.0 - self.container.laser_energy;
                 }
             } else if self.container.thruster_energy > 1.0
                       - self.container.cargo as f32/ self.container.capacity as f32 {
