@@ -26,16 +26,22 @@ const NUM_OF_COLORS: usize = 3;
 #[derive(Debug, Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
 struct Uniforms {
     offset: [f32; 2],
+    aspect: [f32; 2], // not really aspect ratio, more changed aspect after resize
+    // x: -1 to 1 y: -1 to 1
 }
 
 impl Uniforms {
     fn new() -> Self {
         Self {
-            offset: [0.0, 0.0]
+            offset: [0.0, 0.0],
+            aspect: [1.0, 1.0],
         }
     }
     fn update_offset(&mut self, x: f32, y: f32) {
         self.offset = [x, y];
+    }
+    fn update_aspect(&mut self, width: u32, height: u32, init_aspect: [f32; 2]) {
+        self.aspect = [height as f32 / width as f32 * init_aspect[0]/init_aspect[1], 1.0];
     }
 }
 
@@ -84,6 +90,7 @@ pub trait Entity {
 
 struct State {
     model: &'static mut dyn Entity,
+    init_aspect: [f32; 2],
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -94,14 +101,15 @@ struct State {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
-    //uniforms: Uniforms,
-    //uniform_buffer: wgpu::Buffer,
+    uniforms: Uniforms,
+    uniform_buffer: wgpu::Buffer,
     uniform_bind_group: wgpu::BindGroup,
 }
 
 impl State {
     async fn new(window: &Window, model: &'static mut impl Entity, vert_count: u32) -> Self {
         let size = window.inner_size();
+        let init_aspect = [size.width as f32, size.height as f32];
 
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
@@ -138,6 +146,7 @@ impl State {
 
         let mut uniforms = Uniforms::new();
         uniforms.update_offset(0.0, 0.0);
+        uniforms.update_aspect(size.width, size.height, init_aspect);
         let uniform_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Uniform Buffer"),
@@ -239,6 +248,7 @@ impl State {
         let num_indices = vert_count;
 
         Self {
+            init_aspect,
             model,
             surface,
             device,
@@ -250,8 +260,8 @@ impl State {
             vertex_buffer,
             index_buffer,
             num_indices,
-            //uniforms,
-            //uniform_buffer,
+            uniforms,
+            uniform_buffer,
             uniform_bind_group,
         }
     }
@@ -260,6 +270,7 @@ impl State {
         self.size = new_size;
         self.sc_desc.width = new_size.width;
         self.sc_desc.height = new_size.height;
+        self.uniforms.update_aspect(new_size.width, new_size.height, self.init_aspect);
         self.swap_chain = self.device.create_swap_chain(&self.surface, &self.sc_desc);
     }
 
@@ -297,6 +308,40 @@ impl State {
                     },
                 }],
                 depth_stencil_attachment: None,
+            });
+
+            // update uniforms
+            self.uniform_buffer = self.device.create_buffer_init(
+                &wgpu::util::BufferInitDescriptor {
+                    label: Some("Uniform Buffer"),
+                    contents: bytemuck::cast_slice(&[self.uniforms]),
+                    usage: wgpu::BufferUsage::UNIFORM, //| wgpu::BufferUsage::COPY_DST,
+                }
+            );
+            let uniform_bind_group_layout = self.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStage::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    }
+                ],
+                label: Some("uniform_bind_group_layout"),
+            });
+            self.uniform_bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &uniform_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: self.uniform_buffer.as_entire_binding(),
+                    }
+                ],
+                label: Some("uniform_bind_group"),
             });
 
             // update vertex buffer
