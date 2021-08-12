@@ -1,5 +1,6 @@
 use crate::tri::{Widget, Entity, Vertex, X, Y, RED, GREEN, BLUE};
 use cgmath::num_traits::signum;
+use std::cmp::min;
 
 pub struct Laser {
     pub widget: Widget,
@@ -16,7 +17,8 @@ impl Laser {
         }
     }
 }
-const RECHARGE: f32 = 0.0001;
+    const RECHARGE: f32 = 0.0001;
+const CARGO_BACKGROUND_RED: f32 = 0.05;
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
@@ -31,9 +33,9 @@ impl Entity for Laser {
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
-            vert[i].color[RED] = 0.02;
+            vert[i].color[RED] = CARGO_BACKGROUND_RED;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.005;
+            vert[i].color[BLUE] = 0.0;
         }
         for n in 0..3 { // energy area
             let i = n + 3 + offset as usize;
@@ -65,14 +67,15 @@ pub struct Container {
     pub thruster_energy: f32,
 }
 
+const MAX_CARGO: u8 = 10;
 impl Container {
     pub fn new(x: f32, y: f32, cargo: u8) -> Container {
         Container {
             widget: Widget {
                 location: (x, y)
             },
-            capacity: 10,
-            cargo,
+            capacity: MAX_CARGO,
+            cargo: min(cargo, MAX_CARGO),
             laser_energy: 0.0,
             thruster_energy: 0.0,
         }
@@ -88,9 +91,9 @@ impl Entity for Container {
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
-            vert[i].color[RED] = 0.02;
+            vert[i].color[RED] = CARGO_BACKGROUND_RED;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.005;
+            vert[i].color[BLUE] = 0.0;
         }
         for n in 0..6 { // laser energy area
             let i = n + 6 + offset as usize;
@@ -130,7 +133,7 @@ impl Entity for Container {
             }
             vert[i].color[RED] = 0.5;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.1;
+            vert[i].color[BLUE] = 0.0;
         }
         24
     }
@@ -165,9 +168,9 @@ impl Entity for Thruster {
             idx[i] = i as u16;
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
-            vert[i].color[RED] = 0.02;
+            vert[i].color[RED] = CARGO_BACKGROUND_RED;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.005;
+            vert[i].color[BLUE] = 0.0;
         }
         for n in 0..6 { // energy area
             let i = n + 6 + offset as usize;
@@ -183,7 +186,7 @@ impl Entity for Thruster {
             }
             vert[i].color[RED] = 0.5;
             vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.1;
+            vert[i].color[BLUE] = 0.0;
         }
         12
     }
