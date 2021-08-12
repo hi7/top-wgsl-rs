@@ -19,6 +19,8 @@ impl Laser {
 }
     const RECHARGE: f32 = 0.0001;
 const CARGO_BACKGROUND_RED: f32 = 0.05;
+const CARGO_BACKGROUND_GREEN: f32 = 0.0;
+const CARGO_BACKGROUND_BLUE: f32 = 0.0;
 impl Entity for Laser {
     fn update(&mut self) {
         if self.energy < 1.0 {
@@ -34,8 +36,8 @@ impl Entity for Laser {
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = CARGO_BACKGROUND_RED;
-            vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[GREEN] = CARGO_BACKGROUND_GREEN;
+            vert[i].color[BLUE] = CARGO_BACKGROUND_BLUE;
         }
         for n in 0..3 { // energy area
             let i = n + 3 + offset as usize;
@@ -92,8 +94,8 @@ impl Entity for Container {
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = CARGO_BACKGROUND_RED;
-            vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[GREEN] = CARGO_BACKGROUND_GREEN;
+            vert[i].color[BLUE] = CARGO_BACKGROUND_BLUE;
         }
         for n in 0..6 { // laser energy area
             let i = n + 6 + offset as usize;
@@ -169,8 +171,8 @@ impl Entity for Thruster {
             vert[i].position[X] = RAW_VERTICES[indices[n]].position[X] + self.widget.location.0;
             vert[i].position[Y] = RAW_VERTICES[indices[n]].position[Y] + self.widget.location.1;
             vert[i].color[RED] = CARGO_BACKGROUND_RED;
-            vert[i].color[GREEN] = 0.0;
-            vert[i].color[BLUE] = 0.0;
+            vert[i].color[GREEN] = CARGO_BACKGROUND_GREEN;
+            vert[i].color[BLUE] = CARGO_BACKGROUND_BLUE;
         }
         for n in 0..6 { // energy area
             let i = n + 6 + offset as usize;
